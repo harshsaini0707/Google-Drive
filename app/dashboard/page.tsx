@@ -7,7 +7,7 @@ import SearchBar from '@/components/SearchBar';
 export default async function DashboardPage({
     searchParams,
 }: {
-    searchParams: Promise<{ q?: string }>;
+    searchParams: Promise<{ q?: string; tab?: string }>;
 }) {
     const session = await auth();
 
@@ -17,6 +17,8 @@ export default async function DashboardPage({
 
     const params = await searchParams;
     const query = params.q || '';
+    const activeTab = params.tab || 'my-files';
+
     const url = query
         ? `/api/files?q=${encodeURIComponent(query)}`
         : '/api/files';
@@ -28,7 +30,13 @@ export default async function DashboardPage({
         cache: 'no-store',
     });
 
-    const files = response.ok ? await response.json() : [];
+    const allFiles = response.ok ? await response.json() : [];
+
+    // Separate owned and shared files
+    const myFiles = allFiles.filter((f: any) => !f.permission || f.permission === 'owner');
+    const sharedFiles = allFiles.filter((f: any) => f.permission && f.permission !== 'owner');
+
+    const displayFiles = activeTab === 'shared' ? sharedFiles : myFiles;
 
     return (
         <div className="min-h-screen bg-gray-900">
@@ -85,23 +93,52 @@ export default async function DashboardPage({
                     <SearchBar />
                 </div>
 
-                {/* Upload Section */}
-                <div className="mb-8">
-                    <h2 className="text-lg font-medium text-gray-200 mb-4">Upload Files</h2>
-                    <FileUpload />
+                {/* Upload Section - Only show on My Files tab */}
+                {activeTab === 'my-files' && (
+                    <div className="mb-8">
+                        <h2 className="text-lg font-medium text-gray-200 mb-4">Upload Files</h2>
+                        <FileUpload />
+                    </div>
+                )}
+
+                {/* Tabs */}
+                <div className="flex gap-4 mb-6 border-b border-gray-700">
+                    <a
+                        href="/dashboard?tab=my-files"
+                        className={`pb-3 px-1 text-sm font-medium transition-colors ${activeTab === 'my-files'
+                                ? 'text-blue-500 border-b-2 border-blue-500'
+                                : 'text-gray-400 hover:text-gray-300'
+                            }`}
+                    >
+                        My Files ({myFiles.length})
+                    </a>
+                    <a
+                        href="/dashboard?tab=shared"
+                        className={`pb-3 px-1 text-sm font-medium transition-colors ${activeTab === 'shared'
+                                ? 'text-blue-500 border-b-2 border-blue-500'
+                                : 'text-gray-400 hover:text-gray-300'
+                            }`}
+                    >
+                        Shared with Me ({sharedFiles.length})
+                    </a>
                 </div>
 
                 {/* Files Section */}
                 <div>
                     <div className="flex items-center justify-between mb-4">
                         <h2 className="text-lg font-medium text-gray-200">
-                            {query ? `Search results for "${query}"` : 'My Files'}
+                            {query
+                                ? `Search results for "${query}"`
+                                : activeTab === 'shared'
+                                    ? 'Files Shared with You'
+                                    : 'My Files'
+                            }
                         </h2>
                         <span className="text-sm text-gray-500">
-                            {files.length} {files.length === 1 ? 'file' : 'files'}
+                            {displayFiles.length} {displayFiles.length === 1 ? 'file' : 'files'}
                         </span>
                     </div>
-                    <FileList files={files} />
+                    <FileList files={displayFiles} />
                 </div>
             </main>
         </div>
