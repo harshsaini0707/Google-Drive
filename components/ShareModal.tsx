@@ -11,7 +11,11 @@ interface ShareModalProps {
 
 export default function ShareModal({ fileId, fileName, onClose }: ShareModalProps) {
     const [email, setEmail] = useState('');
-    const [permission, setPermission] = useState<'read' | 'edit' | 'delete'>('read');
+    const [permissions, setPermissions] = useState({
+        read: true,
+        edit: false,
+        delete: false,
+    });
     const [loading, setLoading] = useState(false);
     const [shares, setShares] = useState<any[]>([]);
     const [loadingShares, setLoadingShares] = useState(true);
@@ -31,9 +35,18 @@ export default function ShareModal({ fileId, fileName, onClose }: ShareModalProp
         }
     };
 
+    useEffect(() => {
+        fetchShares();
+    }, [fileId]);
+
     const handleShare = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!email.trim()) return;
+
+        // Determine highest permission level
+        let permission: 'read' | 'edit' | 'delete' = 'read';
+        if (permissions.delete) permission = 'delete';
+        else if (permissions.edit) permission = 'edit';
 
         setLoading(true);
         try {
@@ -49,6 +62,7 @@ export default function ShareModal({ fileId, fileName, onClose }: ShareModalProp
             }
 
             setEmail('');
+            setPermissions({ read: true, edit: false, delete: false });
             fetchShares();
             router.refresh();
         } catch (error) {
@@ -77,6 +91,36 @@ export default function ShareModal({ fileId, fileName, onClose }: ShareModalProp
         }
     };
 
+    const handlePermissionChange = (perm: 'read' | 'edit' | 'delete') => {
+        const newPermissions = { ...permissions };
+
+        if (perm === 'delete') {
+            // Delete includes edit and read
+            newPermissions.delete = !permissions.delete;
+            if (newPermissions.delete) {
+                newPermissions.edit = true;
+                newPermissions.read = true;
+            }
+        } else if (perm === 'edit') {
+            // Edit includes read
+            newPermissions.edit = !permissions.edit;
+            if (newPermissions.edit) {
+                newPermissions.read = true;
+            } else {
+                newPermissions.delete = false; // Can't have delete without edit
+            }
+        } else if (perm === 'read') {
+            // Read is base permission
+            newPermissions.read = !permissions.read;
+            if (!newPermissions.read) {
+                newPermissions.edit = false;
+                newPermissions.delete = false;
+            }
+        }
+
+        setPermissions(newPermissions);
+    };
+
     return (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={onClose}>
             <div className="bg-gray-800 rounded-lg p-6 w-full max-w-lg border border-gray-700" onClick={(e) => e.stopPropagation()}>
@@ -84,31 +128,54 @@ export default function ShareModal({ fileId, fileName, onClose }: ShareModalProp
                 <p className="text-sm text-gray-400 mb-6">Share this file with others</p>
 
                 <form onSubmit={handleShare} className="mb-6">
-                    <div className="flex gap-2">
-                        <input
-                            type="email"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            placeholder="Enter email address"
-                            className="flex-1 px-3 py-2 bg-gray-900 border border-gray-700 rounded-lg text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        />
-                        <select
-                            value={permission}
-                            onChange={(e) => setPermission(e.target.value as any)}
-                            className="px-3 py-2 bg-gray-900 border border-gray-700 rounded-lg text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        >
-                            <option value="read">Read</option>
-                            <option value="edit">Edit</option>
-                            <option value="delete">Delete</option>
-                        </select>
-                        <button
-                            type="submit"
-                            disabled={loading || !email.trim()}
-                            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                        >
-                            {loading ? 'Sharing...' : 'Share'}
-                        </button>
+                    <input
+                        type="email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        placeholder="Enter email address"
+                        className="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded-lg text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 mb-3"
+                    />
+
+                    <div className="mb-3">
+                        <p className="text-sm text-gray-400 mb-2">Permissions:</p>
+                        <div className="space-y-2">
+                            <label className="flex items-center gap-2 cursor-pointer">
+                                <input
+                                    type="checkbox"
+                                    checked={permissions.read}
+                                    onChange={() => handlePermissionChange('read')}
+                                    className="w-4 h-4 rounded bg-gray-900 border-gray-700"
+                                />
+                                <span className="text-sm text-gray-300">Read - Can view the file</span>
+                            </label>
+                            <label className="flex items-center gap-2 cursor-pointer">
+                                <input
+                                    type="checkbox"
+                                    checked={permissions.edit}
+                                    onChange={() => handlePermissionChange('edit')}
+                                    className="w-4 h-4 rounded bg-gray-900 border-gray-700"
+                                />
+                                <span className="text-sm text-gray-300">Edit - Can rename the file</span>
+                            </label>
+                            <label className="flex items-center gap-2 cursor-pointer">
+                                <input
+                                    type="checkbox"
+                                    checked={permissions.delete}
+                                    onChange={() => handlePermissionChange('delete')}
+                                    className="w-4 h-4 rounded bg-gray-900 border-gray-700"
+                                />
+                                <span className="text-sm text-gray-300">Delete - Can delete the file</span>
+                            </label>
+                        </div>
                     </div>
+
+                    <button
+                        type="submit"
+                        disabled={loading || !email.trim()}
+                        className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    >
+                        {loading ? 'Sharing...' : 'Share'}
+                    </button>
                 </form>
 
                 <div className="border-t border-gray-700 pt-4">
