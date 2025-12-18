@@ -8,7 +8,7 @@ import { eq, and } from 'drizzle-orm';
 
 export async function POST(
     request: Request,
-    { params }: { params: { fileId: string } }
+    { params }: { params: Promise<{ fileId: string }> }
 ) {
     try {
         const session = await auth();
@@ -16,7 +16,7 @@ export async function POST(
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
-        const { fileId } = params;
+        const { fileId } = await params;
 
         const userIsOwner = await isOwner(session.user.id, fileId);
         if (!userIsOwner) {
@@ -96,7 +96,7 @@ export async function POST(
 
 export async function GET(
     request: Request,
-    { params }: { params: { fileId: string } }
+    { params }: { params: Promise<{ fileId: string }> }
 ) {
     try {
         const session = await auth();
@@ -104,7 +104,7 @@ export async function GET(
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
-        const { fileId } = params;
+        const { fileId } = await params;
 
         const userIsOwner = await isOwner(session.user.id, fileId);
         if (!userIsOwner) {

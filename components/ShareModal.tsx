@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
 interface ShareModalProps {
@@ -16,10 +16,6 @@ export default function ShareModal({ fileId, fileName, onClose }: ShareModalProp
     const [shares, setShares] = useState<any[]>([]);
     const [loadingShares, setLoadingShares] = useState(true);
     const router = useRouter();
-
-    useState(() => {
-        fetchShares();
-    });
 
     const fetchShares = async () => {
         try {

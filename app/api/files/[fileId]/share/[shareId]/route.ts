@@ -8,7 +8,7 @@ import { eq } from 'drizzle-orm';
 
 export async function PATCH(
     request: Request,
-    { params }: { params: { fileId: string; shareId: string } }
+    { params }: { params: Promise<{ fileId: string; shareId: string }> }
 ) {
     try {
         const session = await auth();
@@ -16,7 +16,7 @@ export async function PATCH(
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
-        const { fileId, shareId } = params;
+        const { fileId, shareId } = await params;
 
         const userIsOwner = await isOwner(session.user.id, fileId);
         if (!userIsOwner) {
@@ -61,7 +61,7 @@ export async function PATCH(
 
 export async function DELETE(
     request: Request,
-    { params }: { params: { fileId: string; shareId: string } }
+    { params }: { params: Promise<{ fileId: string; shareId: string }> }
 ) {
     try {
         const session = await auth();
@@ -69,7 +69,7 @@ export async function DELETE(
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
-        const { fileId, shareId } = params;
+        const { fileId, shareId } = await params;
 
         const userIsOwner = await isOwner(session.user.id, fileId);
         if (!userIsOwner) {
