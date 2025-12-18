@@ -92,33 +92,10 @@ export default function ShareModal({ fileId, fileName, onClose }: ShareModalProp
     };
 
     const handlePermissionChange = (perm: 'read' | 'edit' | 'delete') => {
-        const newPermissions = { ...permissions };
-
-        if (perm === 'delete') {
-            // Delete includes edit and read
-            newPermissions.delete = !permissions.delete;
-            if (newPermissions.delete) {
-                newPermissions.edit = true;
-                newPermissions.read = true;
-            }
-        } else if (perm === 'edit') {
-            // Edit includes read
-            newPermissions.edit = !permissions.edit;
-            if (newPermissions.edit) {
-                newPermissions.read = true;
-            } else {
-                newPermissions.delete = false; // Can't have delete without edit
-            }
-        } else if (perm === 'read') {
-            // Read is base permission
-            newPermissions.read = !permissions.read;
-            if (!newPermissions.read) {
-                newPermissions.edit = false;
-                newPermissions.delete = false;
-            }
-        }
-
-        setPermissions(newPermissions);
+        setPermissions({
+            ...permissions,
+            [perm]: !permissions[perm],
+        });
     };
 
     return (
