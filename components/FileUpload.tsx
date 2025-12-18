@@ -29,7 +29,6 @@ export default function FileUpload({ onUploadComplete }: FileUploadProps) {
             }
 
             onUploadComplete?.();
-            router.refresh();
         } catch (error) {
             console.error('Upload error:', error);
             alert(error instanceof Error ? error.message : 'Failed to upload file');
@@ -71,8 +70,8 @@ export default function FileUpload({ onUploadComplete }: FileUploadProps) {
             onDragOver={handleDragOver}
             onDragLeave={handleDragLeave}
             className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors ${isDragging
-                    ? 'border-blue-500 bg-blue-500/10'
-                    : 'border-gray-700 bg-gray-800/50'
+                ? 'border-blue-500 bg-blue-500/10'
+                : 'border-gray-700 bg-gray-800/50'
                 }`}
         >
             <input
