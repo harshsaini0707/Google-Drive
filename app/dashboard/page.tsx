@@ -159,7 +159,7 @@ function DashboardContent() {
                                 <span className="text-gray-200 text-sm">{session?.user?.name}</span>
                             </div>
                             <button
-                                onClick={() => signOut()}
+                                onClick={() => signOut({ callbackUrl: '/', redirect: true })}
                                 className="px-4 py-2 text-sm text-gray-300 hover:text-white hover:bg-gray-800 rounded-lg transition-colors"
                             >
                                 Sign Out
