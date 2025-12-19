@@ -34,7 +34,6 @@ export default function FileCard({ file, onDelete }: FileCardProps) {
             }
 
             onDelete?.();
-            router.refresh();
         } catch (error) {
             console.error('Delete error:', error);
             alert('Failed to delete file');
@@ -112,7 +111,8 @@ export default function FileCard({ file, onDelete }: FileCardProps) {
                                 {isOwner && (
                                     <>
                                         <button
-                                            onClick={() => {
+                                            onClick={(e) => {
+                                                e.stopPropagation();
                                                 setShowRenameModal(true);
                                                 setShowMenu(false);
                                             }}
@@ -121,7 +121,8 @@ export default function FileCard({ file, onDelete }: FileCardProps) {
                                             Rename
                                         </button>
                                         <button
-                                            onClick={() => {
+                                            onClick={(e) => {
+                                                e.stopPropagation();
                                                 setShowShareModal(true);
                                                 setShowMenu(false);
                                             }}
@@ -132,7 +133,10 @@ export default function FileCard({ file, onDelete }: FileCardProps) {
                                     </>
                                 )}
                                 <button
-                                    onClick={handleDelete}
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleDelete();
+                                    }}
                                     disabled={deleting}
                                     className="w-full text-left px-4 py-2 text-sm text-red-400 hover:bg-gray-700 rounded-b-lg disabled:opacity-50"
                                 >
@@ -149,6 +153,7 @@ export default function FileCard({ file, onDelete }: FileCardProps) {
                     fileId={file.id}
                     currentName={file.name}
                     onClose={() => setShowRenameModal(false)}
+                    onSuccess={onDelete}
                 />
             )}
 
