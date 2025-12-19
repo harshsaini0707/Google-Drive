@@ -19,38 +19,15 @@ function DashboardContent() {
     const query = searchParams.get('q') || '';
     const activeSection = searchParams.get('section') || 'my-files';
 
+    // Initialize Socket.io ONCE - only when user logs in
     useEffect(() => {
-        if (status === 'unauthenticated') {
-            router.push('/');
-            return;
-        }
-
         if (status === 'authenticated' && session?.user?.id) {
-            fetchFiles();
-
-            // Initialize Socket.io connection
             const socket = initSocket(session.user.id);
 
-            // Set up event listeners
-            const handleFileShared = (data: any) => {
-                console.log('File shared:', data);
-                fetchFiles();
-            };
-
-            const handleFileDeleted = (data: any) => {
-                console.log('File deleted:', data);
-                fetchFiles();
-            };
-
-            const handleFileRenamed = (data: any) => {
-                console.log('File renamed:', data);
-                fetchFiles();
-            };
-
-            const handleShareRevoked = (data: any) => {
-                console.log('Share revoked:', data);
-                fetchFiles();
-            };
+            const handleFileShared = () => fetchFiles();
+            const handleFileDeleted = () => fetchFiles();
+            const handleFileRenamed = () => fetchFiles();
+            const handleShareRevoked = () => fetchFiles();
 
             onFileShared(handleFileShared);
             onFileDeleted(handleFileDeleted);
@@ -62,10 +39,22 @@ function DashboardContent() {
                 offFileDeleted(handleFileDeleted);
                 offFileRenamed(handleFileRenamed);
                 offShareRevoked(handleShareRevoked);
-                disconnectSocket();
+                // Don't disconnect socket on cleanup - it will reconnect on each navigation
             };
         }
-    }, [status, session?.user?.id, query, activeSection]);
+    }, [session?.user?.id]); // Only reconnect if user ID changes
+
+    // Fetch files when section or query changes
+    useEffect(() => {
+        if (status === 'unauthenticated') {
+            router.push('/');
+            return;
+        }
+
+        if (status === 'authenticated') {
+            fetchFiles();
+        }
+    }, [activeSection, query, status]);
 
     const fetchFiles = async () => {
         setLoading(true);

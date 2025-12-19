@@ -10,23 +10,35 @@ import FileViewer from './FileViewer';
 interface FileCardProps {
     file: any;
     onDelete?: () => void;
+    section?: string;
 }
 
-export default function FileCard({ file, onDelete }: FileCardProps) {
+export default function FileCard({ file, onDelete, section = 'my-files' }: FileCardProps) {
     const [showMenu, setShowMenu] = useState(false);
     const [showRenameModal, setShowRenameModal] = useState(false);
     const [showShareModal, setShowShareModal] = useState(false);
     const [showFileViewer, setShowFileViewer] = useState(false);
     const [deleting, setDeleting] = useState(false);
+    const [restoring, setRestoring] = useState(false);
     const router = useRouter();
 
     const handleDelete = async () => {
-        if (!confirm('Are you sure you want to delete this file?')) return;
+        const message = section === 'trash'
+            ? 'Are you sure you want to permanently delete this file?'
+            : 'Are you sure you want to move this file to trash?';
+
+        if (!confirm(message)) return;
 
         setDeleting(true);
         try {
-            const response = await fetch(`/api/files/${file.id}`, {
-                method: 'DELETE',
+            const url = section === 'trash' ? '/api/files/trash' : `/api/files/${file.id}`;
+            const method = 'DELETE';
+            const body = section === 'trash' ? JSON.stringify({ fileId: file.id }) : undefined;
+
+            const response = await fetch(url, {
+                method,
+                headers: section === 'trash' ? { 'Content-Type': 'application/json' } : undefined,
+                body,
             });
 
             if (!response.ok) {
@@ -39,6 +51,28 @@ export default function FileCard({ file, onDelete }: FileCardProps) {
             alert('Failed to delete file');
         } finally {
             setDeleting(false);
+        }
+    };
+
+    const handleRestore = async () => {
+        setRestoring(true);
+        try {
+            const response = await fetch('/api/files/trash', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ fileId: file.id }),
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to restore file');
+            }
+
+            onDelete?.(); // Refresh the list
+        } catch (error) {
+            console.error('Restore error:', error);
+            alert('Failed to restore file');
+        } finally {
+            setRestoring(false);
         }
     };
 
@@ -150,40 +184,56 @@ export default function FileCard({ file, onDelete }: FileCardProps) {
 
                         {showMenu && (
                             <div className="absolute right-0 mt-2 w-48 bg-gray-800 border border-gray-700 rounded-lg shadow-lg z-10">
-                                {isOwner && (
+                                {section === 'trash' ? (
+                                    <button
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleRestore();
+                                            setShowMenu(false);
+                                        }}
+                                        disabled={restoring}
+                                        className="w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 rounded-lg disabled:opacity-50"
+                                    >
+                                        {restoring ? 'Restoring...' : 'Restore'}
+                                    </button>
+                                ) : (
                                     <>
+                                        {isOwner && (
+                                            <>
+                                                <button
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        setShowRenameModal(true);
+                                                        setShowMenu(false);
+                                                    }}
+                                                    className="w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 rounded-t-lg"
+                                                >
+                                                    Rename
+                                                </button>
+                                                <button
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        setShowShareModal(true);
+                                                        setShowMenu(false);
+                                                    }}
+                                                    className="w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-gray-700"
+                                                >
+                                                    Share
+                                                </button>
+                                            </>
+                                        )}
                                         <button
                                             onClick={(e) => {
                                                 e.stopPropagation();
-                                                setShowRenameModal(true);
-                                                setShowMenu(false);
+                                                handleDelete();
                                             }}
-                                            className="w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 rounded-t-lg"
+                                            disabled={deleting}
+                                            className="w-full text-left px-4 py-2 text-sm text-red-400 hover:bg-gray-700 rounded-b-lg disabled:opacity-50"
                                         >
-                                            Rename
-                                        </button>
-                                        <button
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                setShowShareModal(true);
-                                                setShowMenu(false);
-                                            }}
-                                            className="w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-gray-700"
-                                        >
-                                            Share
+                                            {deleting ? 'Deleting...' : 'Delete'}
                                         </button>
                                     </>
                                 )}
-                                <button
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        handleDelete();
-                                    }}
-                                    disabled={deleting}
-                                    className="w-full text-left px-4 py-2 text-sm text-red-400 hover:bg-gray-700 rounded-b-lg disabled:opacity-50"
-                                >
-                                    {deleting ? 'Deleting...' : 'Delete'}
-                                </button>
                             </div>
                         )}
                     </div>

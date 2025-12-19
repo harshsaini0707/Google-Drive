@@ -10,15 +10,21 @@ export default function SearchBar() {
 
     useEffect(() => {
         const timer = setTimeout(() => {
-            if (query) {
-                router.push(`/dashboard?q=${encodeURIComponent(query)}`);
-            } else {
-                router.push('/dashboard');
+            const params = new URLSearchParams(searchParams.toString());
+
+            // Only update if the query has actually changed
+            if (query !== (searchParams.get('q') || '')) {
+                if (query) {
+                    params.set('q', query);
+                } else {
+                    params.delete('q');
+                }
+                router.push(`/dashboard?${params.toString()}`);
             }
         }, 500);
 
         return () => clearTimeout(timer);
-    }, [query, router]);
+    }, [query, router, searchParams]);
 
     return (
         <div className="relative">
