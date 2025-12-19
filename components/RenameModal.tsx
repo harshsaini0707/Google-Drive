@@ -7,12 +7,12 @@ interface RenameModalProps {
     fileId: string;
     currentName: string;
     onClose: () => void;
+    onSuccess?: () => void;
 }
 
-export default function RenameModal({ fileId, currentName, onClose }: RenameModalProps) {
+export default function RenameModal({ fileId, currentName, onClose, onSuccess }: RenameModalProps) {
     const [name, setName] = useState(currentName);
     const [loading, setLoading] = useState(false);
-    const router = useRouter();
 
     const handleRename = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -30,7 +30,7 @@ export default function RenameModal({ fileId, currentName, onClose }: RenameModa
                 throw new Error('Failed to rename file');
             }
 
-            router.refresh();
+            onSuccess?.();
             onClose();
         } catch (error) {
             console.error('Rename error:', error);
