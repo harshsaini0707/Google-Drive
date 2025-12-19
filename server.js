@@ -4,15 +4,15 @@ const next = require('next');
 const { Server } = require('socket.io');
 
 const dev = process.env.NODE_ENV !== 'production';
-const hostname = 'localhost';
-const port = 3000;
+const hostname = process.env.HOSTNAME || 'localhost';
+const port = parseInt(process.env.PORT || '3000', 10);
 
 // Create Next.js app
 const app = next({ dev, hostname, port });
 const handle = app.getRequestHandler();
 
 app.prepare().then(() => {
-    
+
     const httpServer = createServer(async (req, res) => {
         try {
             const parsedUrl = parse(req.url, true);
@@ -35,7 +35,7 @@ app.prepare().then(() => {
     // Store io instance globally so API routes can access it
     global.io = io;
 
-    
+
     io.on('connection', (socket) => {
         console.log('Client connected:', socket.id);
 

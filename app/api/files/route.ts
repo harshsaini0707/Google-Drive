@@ -95,7 +95,6 @@ export async function GET(request: Request) {
             where: eq(fileShares.sharedWithUserId, session.user.id),
             with: {
                 file: {
-                    where: query ? ilike(files.name, `%${query}%`) : undefined,
                     with: {
                         owner: {
                             columns: {
