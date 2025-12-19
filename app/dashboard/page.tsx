@@ -6,6 +6,7 @@ import { useSession, signOut } from 'next-auth/react';
 import FileUpload from '@/components/FileUpload';
 import FileList from '@/components/FileList';
 import SearchBar from '@/components/SearchBar';
+import { initSocket, disconnectSocket, onFileShared, onFileDeleted, onFileRenamed, onShareRevoked, offFileShared, offFileDeleted, offFileRenamed, offShareRevoked } from '@/lib/socket';
 
 export default function DashboardPage() {
     const { data: session, status } = useSession();
@@ -23,10 +24,48 @@ export default function DashboardPage() {
             return;
         }
 
-        if (status === 'authenticated') {
+        if (status === 'authenticated' && session?.user?.id) {
             fetchFiles();
+
+            // Initialize Socket.io connection
+            const socket = initSocket(session.user.id);
+
+            // Set up event listeners
+            const handleFileShared = (data: any) => {
+                console.log('File shared:', data);
+                fetchFiles();
+            };
+
+            const handleFileDeleted = (data: any) => {
+                console.log('File deleted:', data);
+                fetchFiles(); 
+            };
+
+            const handleFileRenamed = (data: any) => {
+                console.log('File renamed:', data);
+                fetchFiles(); 
+            };
+
+            const handleShareRevoked = (data: any) => {
+                console.log('Share revoked:', data);
+                fetchFiles(); 
+            };
+
+            onFileShared(handleFileShared);
+            onFileDeleted(handleFileDeleted);
+            onFileRenamed(handleFileRenamed);
+            onShareRevoked(handleShareRevoked);
+
+        
+            return () => {
+                offFileShared(handleFileShared);
+                offFileDeleted(handleFileDeleted);
+                offFileRenamed(handleFileRenamed);
+                offShareRevoked(handleShareRevoked);
+                disconnectSocket();
+            };
         }
-    }, [status, query]);
+    }, [status, session?.user?.id, query]);
 
     const fetchFiles = async () => {
         setLoading(true);
@@ -112,8 +151,8 @@ export default function DashboardPage() {
                     <button
                         onClick={() => router.push('/dashboard?tab=my-files')}
                         className={`pb-3 px-1 text-sm font-medium transition-colors ${activeTab === 'my-files'
-                                ? 'text-blue-500 border-b-2 border-blue-500'
-                                : 'text-gray-400 hover:text-gray-300'
+                            ? 'text-blue-500 border-b-2 border-blue-500'
+                            : 'text-gray-400 hover:text-gray-300'
                             }`}
                     >
                         My Files ({myFiles.length})
@@ -121,8 +160,8 @@ export default function DashboardPage() {
                     <button
                         onClick={() => router.push('/dashboard?tab=shared')}
                         className={`pb-3 px-1 text-sm font-medium transition-colors ${activeTab === 'shared'
-                                ? 'text-blue-500 border-b-2 border-blue-500'
-                                : 'text-gray-400 hover:text-gray-300'
+                            ? 'text-blue-500 border-b-2 border-blue-500'
+                            : 'text-gray-400 hover:text-gray-300'
                             }`}
                     >
                         Shared with Me ({sharedFiles.length})

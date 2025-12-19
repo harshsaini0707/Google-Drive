@@ -1,10 +1,11 @@
 import { auth } from '@/lib/auth';
 import { NextResponse } from 'next/server';
 import { db } from '@/db';
-import { fileShares, users } from '@/db/schema';
+import { fileShares, users, files } from '@/db/schema';
 import { isOwner } from '@/lib/permissions';
 import { shareFileSchema } from '@/lib/validators';
 import { eq, and } from 'drizzle-orm';
+import { emitToUser } from '@/lib/socket-server';
 
 export async function POST(
     request: Request,
@@ -61,6 +62,11 @@ export async function POST(
             ),
         });
 
+        // Get file details for notification
+        const file = await db.query.files.findFirst({
+            where: eq(files.id, fileId),
+        });
+
         if (existingShare) {
             const [updated] = await db
                 .update(fileShares)
@@ -70,6 +76,14 @@ export async function POST(
                 })
                 .where(eq(fileShares.id, existingShare.id))
                 .returning();
+
+            // Emit Socket.io event to notify user
+            emitToUser(userToShareWith.id, 'file-shared', {
+                fileId,
+                fileName: file?.name,
+                sharedBy: session.user.name,
+                permission: validation.data.permission,
+            });
 
             return NextResponse.json(updated);
         }
@@ -83,6 +97,14 @@ export async function POST(
                 permission: validation.data.permission,
             })
             .returning();
+
+        // Emit Socket.io event to notify user
+        emitToUser(userToShareWith.id, 'file-shared', {
+            fileId,
+            fileName: file?.name,
+            sharedBy: session.user.name,
+            permission: validation.data.permission,
+        });
 
         return NextResponse.json(newShare, { status: 201 });
     } catch (error) {
