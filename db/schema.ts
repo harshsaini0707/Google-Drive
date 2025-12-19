@@ -1,4 +1,4 @@
-import { pgTable, uuid, varchar, timestamp, bigint, pgEnum } from 'drizzle-orm/pg-core';
+import { pgTable, uuid, varchar, timestamp, bigint, pgEnum, boolean } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 
 // Users table
@@ -21,6 +21,7 @@ export const files = pgTable('files', {
     mimeType: varchar('mime_type', { length: 100 }).notNull(),
     size: bigint('size', { mode: 'number' }).notNull(),
     ownerId: uuid('owner_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+    deleted: boolean('deleted').default(false).notNull(),
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });

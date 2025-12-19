@@ -77,8 +77,8 @@ export async function GET(request: Request) {
 
         const ownedFiles = await db.query.files.findMany({
             where: query
-                ? and(eq(files.ownerId, session.user.id), ilike(files.name, `%${query}%`))
-                : eq(files.ownerId, session.user.id),
+                ? and(eq(files.ownerId, session.user.id), eq(files.deleted, false), ilike(files.name, `%${query}%`))
+                : and(eq(files.ownerId, session.user.id), eq(files.deleted, false)),
             with: {
                 owner: {
                     columns: {

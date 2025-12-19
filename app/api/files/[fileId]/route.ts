@@ -9,7 +9,7 @@ import { eq } from 'drizzle-orm';
 
 export async function DELETE(
     request: Request,
-    { params }: { params: { fileId: string } }
+    { params }: { params: Promise<{ fileId: string }> }
 ) {
     try {
         const session = await auth();
@@ -17,26 +17,20 @@ export async function DELETE(
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
-        const { fileId } = params;
+        const { fileId } = await params;
 
         const hasPermission = await canDelete(session.user.id, fileId);
         if (!hasPermission) {
             return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
         }
 
-        const file = await db.query.files.findFirst({
-            where: eq(files.id, fileId),
-        });
+        // Soft delete - just set deleted flag to true
+        await db
+            .update(files)
+            .set({ deleted: true, updatedAt: new Date() })
+            .where(eq(files.id, fileId));
 
-        if (!file) {
-            return NextResponse.json({ error: 'File not found' }, { status: 404 });
-        }
-
-        await deleteFileFromS3(file.s3Key);
-
-        await db.delete(files).where(eq(files.id, fileId));
-
-        return NextResponse.json({ message: 'File deleted successfully' });
+        return NextResponse.json({ message: 'File moved to trash' });
     } catch (error) {
         console.error('Error deleting file:', error);
         return NextResponse.json(
