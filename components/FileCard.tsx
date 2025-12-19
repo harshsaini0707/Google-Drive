@@ -141,7 +141,7 @@ export default function FileCard({ file, onDelete }: FileCardProps) {
                                 e.stopPropagation();
                                 setShowMenu(!showMenu);
                             }}
-                            className="p-1 hover:bg-gray-700 rounded opacity-0 group-hover:opacity-100 transition-opacity"
+                            className="p-1 hover:bg-gray-700 rounded transition-opacity"
                         >
                             <svg className="w-5 h-5 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
                                 <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />

@@ -71,13 +71,16 @@ function DashboardContent() {
         setLoading(true);
         try {
             let url = '';
+            let needsFiltering = false;
 
             switch (activeSection) {
                 case 'my-files':
                     url = query ? `/api/files?q=${encodeURIComponent(query)}` : '/api/files';
+                    needsFiltering = true;
                     break;
                 case 'shared-with-me':
                     url = '/api/files';
+                    needsFiltering = true;
                     break;
                 case 'i-shared':
                     url = '/api/files/shared-by-me';
@@ -85,11 +88,9 @@ function DashboardContent() {
                 case 'trash':
                     url = '/api/files/trash';
                     break;
-                case 'home':
-                    url = '/api/files';
-                    break;
                 default:
                     url = '/api/files';
+                    needsFiltering = true;
             }
 
             const response = await fetch(url);
@@ -98,14 +99,20 @@ function DashboardContent() {
                 const data = await response.json();
 
                 // Filter based on section
-                if (activeSection === 'my-files') {
-                    setFiles(data.filter((f: any) => f.ownerId === session?.user?.id && !f.permission));
-                } else if (activeSection === 'shared-with-me') {
-                    setFiles(data.filter((f: any) => f.permission && f.permission !== 'owner'));
-                } else if (activeSection === 'home') {
-                    // Show recent files
-                    setFiles(data.slice(0, 10));
+                if (needsFiltering) {
+                    if (activeSection === 'my-files') {
+                        // Only show files uploaded by user (not shared files)
+                        const myFiles = data.filter((f: any) => !f.permission || f.permission === 'owner');
+                        setFiles(myFiles);
+                    } else if (activeSection === 'shared-with-me') {
+                        // Only show files shared with user
+                        const sharedFiles = data.filter((f: any) => f.permission && f.permission !== 'owner');
+                        setFiles(sharedFiles);
+                    } else {
+                        setFiles(data);
+                    }
                 } else {
+                    // For i-shared and trash, use data directly from API
                     setFiles(data);
                 }
             } else {
@@ -121,7 +128,6 @@ function DashboardContent() {
 
     const getSectionTitle = () => {
         switch (activeSection) {
-            case 'home': return 'Home';
             case 'my-files': return 'My Files';
             case 'shared-with-me': return 'Shared with me';
             case 'i-shared': return 'Files I shared';

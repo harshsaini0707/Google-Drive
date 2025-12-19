@@ -1,19 +1,23 @@
 'use client';
 
-import Link from 'next/link';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
+import { FolderOpen, Users, Send, Trash2 } from 'lucide-react';
 
 export default function Sidebar() {
     const searchParams = useSearchParams();
+    const router = useRouter();
     const activeSection = searchParams.get('section') || 'my-files';
 
     const navItems = [
-        { id: 'home', label: 'Home', icon: '🏠' },
-        { id: 'my-files', label: 'My Files', icon: '📁' },
-        { id: 'shared-with-me', label: 'Shared with me', icon: '👥' },
-        { id: 'i-shared', label: 'Files I shared', icon: '📤' },
-        { id: 'trash', label: 'Trash', icon: '🗑️' },
+        { id: 'my-files', label: 'My Files', icon: FolderOpen },
+        { id: 'shared-with-me', label: 'Shared with me', icon: Users },
+        { id: 'i-shared', label: 'Files I shared', icon: Send },
+        { id: 'trash', label: 'Trash', icon: Trash2 },
     ];
+
+    const handleNavigation = (sectionId: string) => {
+        router.push(`/dashboard?section=${sectionId}`);
+    };
 
     return (
         <div className="w-64 bg-gray-900 h-screen flex flex-col border-r border-gray-800">
@@ -25,32 +29,24 @@ export default function Sidebar() {
                 <span className="text-white text-xl font-semibold">Drive</span>
             </div>
 
-            {/* New Button */}
-            <div className="px-4 py-2">
-                <Link
-                    href="/dashboard?section=my-files"
-                    className="flex items-center gap-3 px-4 py-3 bg-gray-800 hover:bg-gray-750 rounded-lg transition-colors"
-                >
-                    <span className="text-2xl">+</span>
-                    <span className="text-gray-200 font-medium">New</span>
-                </Link>
-            </div>
-
             {/* Navigation */}
             <nav className="flex-1 px-2 py-4 space-y-1">
-                {navItems.map((item) => (
-                    <Link
-                        key={item.id}
-                        href={`/dashboard?section=${item.id}`}
-                        className={`flex items-center gap-3 px-4 py-2.5 rounded-lg transition-colors ${activeSection === item.id
-                                ? 'bg-blue-600 text-white'
-                                : 'text-gray-300 hover:bg-gray-800'
-                            }`}
-                    >
-                        <span className="text-xl">{item.icon}</span>
-                        <span className="font-medium">{item.label}</span>
-                    </Link>
-                ))}
+                {navItems.map((item) => {
+                    const Icon = item.icon;
+                    return (
+                        <button
+                            key={item.id}
+                            onClick={() => handleNavigation(item.id)}
+                            className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-lg transition-colors text-left ${activeSection === item.id
+                                    ? 'bg-blue-600 text-white'
+                                    : 'text-gray-300 hover:bg-gray-800'
+                                }`}
+                        >
+                            <Icon className="w-5 h-5" />
+                            <span className="font-medium">{item.label}</span>
+                        </button>
+                    );
+                })}
             </nav>
         </div>
     );
