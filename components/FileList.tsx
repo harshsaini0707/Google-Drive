@@ -34,7 +34,7 @@ export default function FileList({ files, onFileDeleted, section = 'my-files' }:
     }
 
     return (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
             {files.map((file) => (
                 <FileCard key={file.id} file={file} onDelete={onFileDeleted} section={section} />
             ))}

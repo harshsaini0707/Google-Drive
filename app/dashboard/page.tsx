@@ -3,7 +3,7 @@
 import { useEffect, useState, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useSession, signOut } from 'next-auth/react';
-import Sidebar from '@/components/Sidebar';
+import Sidebar, { MobileMenuButton } from '@/components/Sidebar';
 import FileUpload from '@/components/FileUpload';
 import FileList from '@/components/FileList';
 import SearchBar from '@/components/SearchBar';
@@ -15,6 +15,7 @@ function DashboardContent() {
     const router = useRouter();
     const [files, setFiles] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
+    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
     const query = searchParams.get('q') || '';
     const activeSection = searchParams.get('section') || 'my-files';
@@ -137,49 +138,61 @@ function DashboardContent() {
     }
 
     return (
-        <div className="flex h-screen bg-gray-950">
+        <div className="flex h-screen bg-gray-950 overflow-hidden">
             {/* Sidebar */}
-            <Sidebar />
+            <Sidebar isMobileOpen={isMobileMenuOpen} onMobileClose={() => setIsMobileMenuOpen(false)} />
 
             {/* Main Content */}
             <div className="flex-1 flex flex-col overflow-hidden">
                 {/* Header */}
-                <header className="bg-gray-900 border-b border-gray-800 px-6 py-4">
-                    <div className="flex items-center justify-between">
+                <header className="bg-gray-900 border-b border-gray-800 px-4 sm:px-6 py-4">
+                    <div className="flex items-center justify-between gap-3">
+                        {/* Mobile menu button */}
+                        <MobileMenuButton onClick={() => setIsMobileMenuOpen(true)} />
+
                         <div className="flex-1 max-w-2xl">
                             <SearchBar />
                         </div>
-                        <div className="flex items-center gap-4 ml-4">
-                            <div className="flex items-center gap-3">
+                        <div className="hidden sm:flex items-center gap-4">
+                            <div className="flex items-center gap-2 sm:gap-3">
                                 <img
                                     src={session?.user?.image || '/default-avatar.png'}
                                     alt={session?.user?.name || 'User'}
                                     className="w-8 h-8 rounded-full"
                                 />
-                                <span className="text-gray-200 text-sm">{session?.user?.name}</span>
+                                <span className="hidden md:block text-gray-200 text-sm">{session?.user?.name}</span>
                             </div>
                             <button
                                 onClick={() => signOut({ callbackUrl: '/', redirect: true })}
-                                className="px-4 py-2 text-sm text-gray-300 hover:text-white hover:bg-gray-800 rounded-lg transition-colors"
+                                className="hidden sm:block px-4 py-2 text-sm text-gray-300 hover:text-white hover:bg-gray-800 rounded-lg transition-colors"
                             >
                                 Sign Out
                             </button>
+                        </div>
+
+                        {/* Mobile user menu */}
+                        <div className="sm:hidden flex items-center">
+                            <img
+                                src={session?.user?.image || '/default-avatar.png'}
+                                alt={session?.user?.name || 'User'}
+                                className="w-8 h-8 rounded-full"
+                            />
                         </div>
                     </div>
                 </header>
 
                 {/* Content Area */}
-                <main className="flex-1 overflow-auto px-6 py-6">
+                <main className="flex-1 overflow-auto px-4 sm:px-6 py-4 sm:py-6">
                     <div className="max-w-7xl mx-auto">
                         {/* Section Header */}
-                        <div className="mb-6">
-                            <h1 className="text-2xl font-semibold text-gray-100">{getSectionTitle()}</h1>
+                        <div className="mb-4 sm:mb-6">
+                            <h1 className="text-xl sm:text-2xl font-semibold text-gray-100">{getSectionTitle()}</h1>
                         </div>
 
                         {/* Upload Section (only for My Files) */}
                         {activeSection === 'my-files' && (
-                            <div className="mb-8">
-                                <h2 className="text-lg font-medium text-gray-200 mb-4">Upload Files</h2>
+                            <div className="mb-6 sm:mb-8">
+                                <h2 className="text-base sm:text-lg font-medium text-gray-200 mb-3 sm:mb-4">Upload Files</h2>
                                 <FileUpload onUploadComplete={fetchFiles} />
                             </div>
                         )}
