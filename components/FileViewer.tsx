@@ -68,6 +68,24 @@ export default function FileViewer({ fileId, fileName, mimeType, onClose }: File
             );
         }
 
+        // Office files - Word, PowerPoint, Excel
+        if (
+            mimeType === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' || // .docx
+            mimeType === 'application/vnd.openxmlformats-officedocument.presentationml.presentation' || // .pptx
+            mimeType === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' || // .xlsx
+            mimeType === 'application/msword' || // .doc
+            mimeType === 'application/vnd.ms-powerpoint' || // .ppt
+            mimeType === 'application/vnd.ms-excel' // .xls
+        ) {
+            return (
+                <iframe
+                    src={`https://docs.google.com/viewer?url=${encodeURIComponent(fileUrl)}&embedded=true`}
+                    className="w-full h-[70vh] rounded-lg"
+                    title={fileName}
+                />
+            );
+        }
+
         // Videos
         if (mimeType.startsWith('video/')) {
             return (
