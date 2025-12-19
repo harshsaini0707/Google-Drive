@@ -42,7 +42,7 @@ export async function DELETE(
 
 export async function PATCH(
     request: Request,
-    { params }: { params: { fileId: string } }
+    { params }: { params: Promise<{ fileId: string }> }
 ) {
     try {
         const session = await auth();
@@ -50,7 +50,7 @@ export async function PATCH(
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
-        const { fileId } = params;
+        const { fileId } = await params;
 
         const hasPermission = await canEdit(session.user.id, fileId);
         if (!hasPermission) {
