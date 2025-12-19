@@ -9,16 +9,16 @@ export default async function Home() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
-      <div className="w-full max-w-md space-y-8 rounded-2xl bg-white p-10 shadow-2xl">
+    <div className="flex min-h-screen items-center justify-center bg-gray-950">
+      <div className="w-full max-w-md space-y-8 rounded-2xl bg-gray-900 p-10 shadow-2xl border border-gray-800">
         <div className="text-center">
-          <h1 className="text-4xl font-bold text-gray-900">Google Drive Clone</h1>
-          <p className="mt-2 text-sm text-gray-600">
+          <h1 className="text-4xl font-bold text-gray-100 italic">Drive</h1>
+          <p className="mt-2 text-sm text-gray-400">
             Store, share, and manage your files securely
           </p>
         </div>
 
-        <div className="mt-8 space-y-6">
+        <div className="mt-8">
           <form
             action={async () => {
               'use server';
@@ -27,10 +27,10 @@ export default async function Home() {
           >
             <button
               type="submit"
-              className="group relative flex w-full justify-center rounded-lg border border-transparent bg-blue-600 px-4 py-3 text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
+              className="group relative flex w-full justify-center rounded-lg border border-gray-700 bg-gray-800 px-4 py-3 text-sm font-medium text-gray-200 hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors gap-3 items-center"
             >
               <svg
-                className="mr-2 h-5 w-5"
+                className="h-5 w-5"
                 viewBox="0 0 24 24"
                 fill="currentColor"
               >
@@ -42,38 +42,6 @@ export default async function Home() {
               Sign in with Google
             </button>
           </form>
-
-          <div className="mt-6">
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-300" />
-              </div>
-              <div className="relative flex justify-center text-sm">
-                <span className="bg-white px-2 text-gray-500">Features</span>
-              </div>
-            </div>
-
-            <div className="mt-6 grid grid-cols-1 gap-4 text-sm text-gray-600">
-              <div className="flex items-center">
-                <svg className="mr-2 h-5 w-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
-                Upload and manage files
-              </div>
-              <div className="flex items-center">
-                <svg className="mr-2 h-5 w-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
-                Share with permissions
-              </div>
-              <div className="flex items-center">
-                <svg className="mr-2 h-5 w-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
-                Search and organize
-              </div>
-            </div>
-          </div>
         </div>
       </div>
     </div>
