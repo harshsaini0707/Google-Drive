@@ -8,7 +8,7 @@ export const emitToUser = (userId: string, event: string, data: any) => {
 export const emitToMultipleUsers = (userIds: string[], event: string, data: any) => {
     if (global.io) {
         userIds.forEach((userId) => {
-            global.io.to(`user:${userId}`).emit(event, data);
+            global.io?.to(`user:${userId}`).emit(event, data);
         });
     }
 };

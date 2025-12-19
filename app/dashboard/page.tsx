@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useSession, signOut } from 'next-auth/react';
 import FileUpload from '@/components/FileUpload';
@@ -8,7 +8,7 @@ import FileList from '@/components/FileList';
 import SearchBar from '@/components/SearchBar';
 import { initSocket, disconnectSocket, onFileShared, onFileDeleted, onFileRenamed, onShareRevoked, offFileShared, offFileDeleted, offFileRenamed, offShareRevoked } from '@/lib/socket';
 
-export default function DashboardPage() {
+function DashboardContent() {
     const { data: session, status } = useSession();
     const searchParams = useSearchParams();
     const router = useRouter();
@@ -38,17 +38,17 @@ export default function DashboardPage() {
 
             const handleFileDeleted = (data: any) => {
                 console.log('File deleted:', data);
-                fetchFiles(); 
+                fetchFiles();
             };
 
             const handleFileRenamed = (data: any) => {
                 console.log('File renamed:', data);
-                fetchFiles(); 
+                fetchFiles();
             };
 
             const handleShareRevoked = (data: any) => {
                 console.log('Share revoked:', data);
-                fetchFiles(); 
+                fetchFiles();
             };
 
             onFileShared(handleFileShared);
@@ -56,7 +56,7 @@ export default function DashboardPage() {
             onFileRenamed(handleFileRenamed);
             onShareRevoked(handleShareRevoked);
 
-        
+
             return () => {
                 offFileShared(handleFileShared);
                 offFileDeleted(handleFileDeleted);
@@ -181,5 +181,13 @@ export default function DashboardPage() {
                 </div>
             </main>
         </div>
+    );
+}
+
+export default function DashboardPage() {
+    return (
+        <Suspense fallback={<div className="min-h-screen bg-gray-950 flex items-center justify-center"><div className="text-gray-400">Loading...</div></div>}>
+            <DashboardContent />
+        </Suspense>
     );
 }
