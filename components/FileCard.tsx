@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { formatFileSize, formatDate } from '@/lib/format';
 import RenameModal from './RenameModal';
 import ShareModal from './ShareModal';
+import FileViewer from './FileViewer';
 
 interface FileCardProps {
     file: any;
@@ -15,6 +16,7 @@ export default function FileCard({ file, onDelete }: FileCardProps) {
     const [showMenu, setShowMenu] = useState(false);
     const [showRenameModal, setShowRenameModal] = useState(false);
     const [showShareModal, setShowShareModal] = useState(false);
+    const [showFileViewer, setShowFileViewer] = useState(false);
     const [deleting, setDeleting] = useState(false);
     const router = useRouter();
 
@@ -39,6 +41,10 @@ export default function FileCard({ file, onDelete }: FileCardProps) {
         } finally {
             setDeleting(false);
         }
+    };
+
+    const handleFileClick = () => {
+        setShowFileViewer(true);
     };
 
     const getFileIcon = (mimeType: string) => {
@@ -67,7 +73,10 @@ export default function FileCard({ file, onDelete }: FileCardProps) {
 
     return (
         <>
-            <div className="group relative bg-gray-800 hover:bg-gray-750 rounded-lg p-4 transition-colors border border-gray-700 hover:border-gray-600">
+            <div
+                className="group relative bg-gray-800 hover:bg-gray-750 rounded-lg p-4 transition-colors border border-gray-700 hover:border-gray-600 cursor-pointer"
+                onClick={handleFileClick}
+            >
                 <div className="flex items-start gap-3">
                     <div className="flex-shrink-0">{getFileIcon(file.mimeType)}</div>
 
@@ -87,7 +96,10 @@ export default function FileCard({ file, onDelete }: FileCardProps) {
 
                     <div className="relative">
                         <button
-                            onClick={() => setShowMenu(!showMenu)}
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                setShowMenu(!showMenu);
+                            }}
                             className="p-1 hover:bg-gray-700 rounded opacity-0 group-hover:opacity-100 transition-opacity"
                         >
                             <svg className="w-5 h-5 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
@@ -145,6 +157,15 @@ export default function FileCard({ file, onDelete }: FileCardProps) {
                     fileId={file.id}
                     fileName={file.name}
                     onClose={() => setShowShareModal(false)}
+                />
+            )}
+
+            {showFileViewer && (
+                <FileViewer
+                    fileId={file.id}
+                    fileName={file.name}
+                    mimeType={file.mimeType}
+                    onClose={() => setShowFileViewer(false)}
                 />
             )}
         </>
