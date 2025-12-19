@@ -5,9 +5,10 @@ import FileCard from './FileCard';
 interface FileListProps {
     files: any[];
     onFileDeleted?: () => void;
+    section?: string;
 }
 
-export default function FileList({ files, onFileDeleted }: FileListProps) {
+export default function FileList({ files, onFileDeleted, section = 'my-files' }: FileListProps) {
     if (files.length === 0) {
         return (
             <div className="text-center py-12">
@@ -25,7 +26,9 @@ export default function FileList({ files, onFileDeleted }: FileListProps) {
                     />
                 </svg>
                 <h3 className="mt-2 text-sm font-medium text-gray-400">No files</h3>
-                <p className="mt-1 text-sm text-gray-500">Get started by uploading a file.</p>
+                <p className="mt-1 text-sm text-gray-500">
+                    {section === 'trash' ? 'Trash is empty' : 'Get started by uploading a file.'}
+                </p>
             </div>
         );
     }
@@ -33,7 +36,7 @@ export default function FileList({ files, onFileDeleted }: FileListProps) {
     return (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {files.map((file) => (
-                <FileCard key={file.id} file={file} onDelete={onFileDeleted} />
+                <FileCard key={file.id} file={file} onDelete={onFileDeleted} section={section} />
             ))}
         </div>
     );
