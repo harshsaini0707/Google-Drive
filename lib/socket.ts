@@ -8,13 +8,20 @@ export const initSocket = (userId: string) => {
     }
 
     // Connect to Socket.io server
-    socket = io('http://localhost:3000', {
+
+    const socketUrl = process.env.NEXT_PUBLIC_SOCKET_URL ||
+        (typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000');
+
+    socket = io(socketUrl, {
         transports: ['websocket', 'polling'],
+        reconnection: true,           // Auto-reconnect if disconnected
+        reconnectionAttempts: 5,      // Try 5 times
+        reconnectionDelay: 1000,      // Wait 1 second between attempts
     });
 
     socket.on('connect', () => {
         console.log('Socket connected:', socket?.id);
-        
+
         socket?.emit('join-user-room', userId);
     });
 

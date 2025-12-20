@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, Suspense } from 'react';
+import { useEffect, useState, Suspense, useCallback, useRef } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useSession, signOut } from 'next-auth/react';
 import Sidebar, { MobileMenuButton } from '@/components/Sidebar';
@@ -13,6 +13,10 @@ function DashboardContent() {
     const { data: session, status } = useSession();
     const searchParams = useSearchParams();
     const router = useRouter();
+
+    // Prevent duplicate API calls
+    const isFetching = useRef(false);
+    const lastFetchKey = useRef('');
     const [files, setFiles] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -20,45 +24,20 @@ function DashboardContent() {
     const query = searchParams.get('q') || '';
     const activeSection = searchParams.get('section') || 'my-files';
 
-    // Initialize Socket.io ONCE - only when user logs in
-    useEffect(() => {
-        if (status === 'authenticated' && session?.user?.id) {
-            const socket = initSocket(session.user.id);
+    // Optimized fetchFiles with duplicate call prevention - DEFINED FIRST
+    const fetchFiles = useCallback(async (force = false) => {
+        // Create a unique key for this fetch request
+        const fetchKey = `${activeSection}-${query}`;
 
-            const handleFileShared = () => fetchFiles();
-            const handleFileDeleted = () => fetchFiles();
-            const handleFileRenamed = () => fetchFiles();
-            const handleShareRevoked = () => fetchFiles();
-
-            onFileShared(handleFileShared);
-            onFileDeleted(handleFileDeleted);
-            onFileRenamed(handleFileRenamed);
-            onShareRevoked(handleShareRevoked);
-
-            return () => {
-                offFileShared(handleFileShared);
-                offFileDeleted(handleFileDeleted);
-                offFileRenamed(handleFileRenamed);
-                offShareRevoked(handleShareRevoked);
-                // Don't disconnect socket on cleanup - it will reconnect on each navigation
-            };
-        }
-    }, [session?.user?.id]); // Only reconnect if user ID changes
-
-    // Fetch files when section or query changes
-    useEffect(() => {
-        if (status === 'unauthenticated') {
-            router.push('/');
+        // Prevent duplicate calls for same data
+        if (!force && (isFetching.current || fetchKey === lastFetchKey.current)) {
             return;
         }
 
-        if (status === 'authenticated') {
-            fetchFiles();
-        }
-    }, [activeSection, query, status]);
-
-    const fetchFiles = async () => {
+        isFetching.current = true;
+        lastFetchKey.current = fetchKey;
         setLoading(true);
+
         try {
             let url = '';
             let needsFiltering = false;
@@ -91,18 +70,15 @@ function DashboardContent() {
                 // Filter based on section
                 if (needsFiltering) {
                     if (activeSection === 'my-files') {
-                        // Only show files uploaded by user (not shared files)
                         const myFiles = data.filter((f: any) => !f.permission || f.permission === 'owner');
                         setFiles(myFiles);
                     } else if (activeSection === 'shared-with-me') {
-                        // Only show files shared with user
                         const sharedFiles = data.filter((f: any) => f.permission && f.permission !== 'owner');
                         setFiles(sharedFiles);
                     } else {
                         setFiles(data);
                     }
                 } else {
-                    // For i-shared and trash, use data directly from API
                     setFiles(data);
                 }
             } else {
@@ -112,9 +88,52 @@ function DashboardContent() {
             console.error('Error fetching files:', error);
             setFiles([]);
         } finally {
+            isFetching.current = false;
             setLoading(false);
         }
-    };
+    }, [activeSection, query]);
+
+    // Initialize Socket.io ONCE - only when user logs in
+    useEffect(() => {
+        if (status === 'authenticated' && session?.user?.id) {
+            initSocket(session.user.id);
+
+            // Debounce socket events to prevent rapid API calls
+            let refreshTimeout: NodeJS.Timeout | null = null;
+            const debouncedRefresh = () => {
+                if (refreshTimeout) clearTimeout(refreshTimeout);
+                refreshTimeout = setTimeout(() => {
+                    fetchFiles(true);  // Force refresh
+                }, 300);  // Wait 300ms before refreshing
+            };
+
+            onFileShared(debouncedRefresh);
+            onFileDeleted(debouncedRefresh);
+            onFileRenamed(debouncedRefresh);
+            onShareRevoked(debouncedRefresh);
+
+            return () => {
+                if (refreshTimeout) clearTimeout(refreshTimeout);
+                offFileShared(debouncedRefresh);
+                offFileDeleted(debouncedRefresh);
+                offFileRenamed(debouncedRefresh);
+                offShareRevoked(debouncedRefresh);
+            };
+        }
+    }, [session?.user?.id, fetchFiles]);
+
+    // Fetch files when section or query changes
+    useEffect(() => {
+        if (status === 'unauthenticated') {
+            router.push('/');
+            return;
+        }
+
+        if (status === 'authenticated') {
+            fetchFiles();
+        }
+    }, [activeSection, query, status, fetchFiles]);
+
 
     const getSectionTitle = () => {
         switch (activeSection) {
