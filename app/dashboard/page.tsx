@@ -212,7 +212,7 @@ function DashboardContent() {
                         {activeSection === 'my-files' && (
                             <div className="mb-6 sm:mb-8">
                                 <h2 className="text-base sm:text-lg font-medium text-gray-200 mb-3 sm:mb-4">Upload Files</h2>
-                                <FileUpload onUploadComplete={fetchFiles} />
+                                <FileUpload onUploadComplete={() => fetchFiles(true)} />
                             </div>
                         )}
 
@@ -228,7 +228,7 @@ function DashboardContent() {
                             </div>
                             <FileList
                                 files={files}
-                                onFileDeleted={fetchFiles}
+                                onFileDeleted={() => fetchFiles(true)}
                                 section={activeSection}
                             />
                         </div>
